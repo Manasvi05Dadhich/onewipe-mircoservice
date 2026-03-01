@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract certificateRegistry {
+contract CertificateRegistry {
 
     address public owner ; 
     modifier onlyOwner () {
@@ -10,7 +10,7 @@ contract certificateRegistry {
     }
 
     constructor (){
-        owner == msg.sender;
+        owner = msg.sender;
     }
 
     mapping(address => bool) public issuers ;
@@ -39,8 +39,8 @@ contract certificateRegistry {
 
     mapping(bytes32 => Certificate) public certificates ;
 
-    event certIssued(bytes32 hash , address issuer);
-    event  certRevoked(bytes32 hash, address issuer);
+    event CertificateIssued(bytes32 hash , address issuer);
+    event CertificateRevoked(bytes32 hash, address issuer);
 
 
     function issueCert(bytes32 hash) external onlyIssuer{
@@ -56,6 +56,26 @@ contract certificateRegistry {
 
         
         emit CertificateIssued(hash, msg.sender);
+    }  
+
+    function verifyCertificate(bytes32 hash) external view returns (bool) {
+        Certificate memory cert = certificates[hash];
+
+        if (cert.issuer == address(0)) return false;
+        if (cert.isRevoked) return false;
+        return true;
     }
-    
-}
+
+      function revokeCertificate(bytes32 hash) external {
+        Certificate storage cert = certificates[hash];
+
+        require(cert.issuer != address(0), "Cert not found");
+        require(msg.sender == cert.issuer, "Only issuer can revoke");
+        require(!cert.isRevoked, "Already revoked");
+
+        cert.isRevoked = true;
+        cert.revokedAt = block.timestamp;
+
+        emit CertificateRevoked(hash, msg.sender);
+    }
+}  
