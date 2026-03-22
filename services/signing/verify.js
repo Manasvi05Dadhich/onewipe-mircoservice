@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const fs = require('fs');
 
-const publickey = fs.readFileSync('../keys/public.pem');
+const publickey = fs.readFileSync('./keys/public.pem');
 
 module.exports = function verifyy(hash, signature) {
     const verify = crypto.createVerify("RSA-SHA256");
