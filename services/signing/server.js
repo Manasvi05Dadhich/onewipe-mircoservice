@@ -1,7 +1,8 @@
 const express = require('express');
 const multer = require('multer');
-const hash = require('./hash');
-const sign = require('./sign');
+const createHash = require('./hash');
+const signHash = require('./sign');
+const verify = require('./verify');
 
 const app = express();
 const upload = multer();
@@ -13,9 +14,18 @@ app.post('/sign', upload.single("pdf"), (req, res) => {
 
     const buffer = req.file.buffer;
     const hash = createHash(buffer);
-    const sign = signHash(hash);
+    const signature = signHash(hash);
 
     res.json({ hash, signature });
+});
+
+app.post('/verify', express.json(), (req, res) => {
+    if (!req.body) {
+        return res.status(400).json({ err: "No file provided" });
+    }
+    const { hash, signature } = req.body;
+    const isValid = verify(hash, signature);
+    res.json({ isValid });
 })
 
 app.listen(3000, () => {
