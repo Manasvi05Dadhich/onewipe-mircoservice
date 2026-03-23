@@ -1,13 +1,16 @@
 const express = require('express');
 const limiter = require('./middlewar/rateLimiting');
-const authMiddleware = require('./middlewar/authmiddleware');
-const authRoutes = require('./routes/auth.routes');
-const app = express();
+const gatewayAuth = require('./middlewar/authmiddleware');
+const authProxy = require('./routes/auth.routes');
+const certProxy = require('./routes/cert.routes');
+const blockchainProxy = require('./routes/blockchain.routes');
+const verifyProxy = require('./routes/verify.routes');
 
-app.use(express.json());
+const app = express();
 app.use(limiter);
-app.use('/auth', authMiddleware);
+app.use('/auth', authProxy);
 app.use('/cert', gatewayAuth, certProxy);
 app.use('/blockchain', gatewayAuth, blockchainProxy);
+app.use('/verify', gatewayAuth, verifyProxy);
 
 module.exports = app;
