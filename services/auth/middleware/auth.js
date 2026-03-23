@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -13,4 +14,17 @@ function authMiddleware(req, res, next) {
         return res.status(401).json({ err: "Invalid or expired token" });
     }
 }
-module.exports = authMiddleware;
+
+function requireRole(...roles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ err: "Not authenticated" });
+        }
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ err: "Forbidden: insufficient role" });
+        }
+        next();
+    };
+}
+
+module.exports = { authMiddleware, requireRole };
