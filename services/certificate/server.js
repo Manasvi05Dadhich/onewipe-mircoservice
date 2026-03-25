@@ -6,11 +6,9 @@ const certRoutes = require('./routes/cert.routes');
 const app = express();
 app.use(express.json());
 
-// Mount all certificate routes at /
-// So /issue, /certificate/:hash, etc. are directly accessible
 app.use('/', certRoutes);
 
-// Connect to MongoDB first, then start server
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("Certificate service connected to MongoDB");

@@ -11,7 +11,6 @@ app.post('/sign', upload.single("pdf"), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ err: "No PDF uploaded" });
     }
-
     const buffer = req.file.buffer;
     const hash = createHash(buffer);
     const signature = signHash(hash);
@@ -28,6 +27,6 @@ app.post('/verify', express.json(), (req, res) => {
     res.json({ isValid });
 })
 
-app.listen(3000, () => {
-    console.log("Signing service running on port 3000");
+app.listen(3002, () => {
+    console.log("Signing service running on port 3002");
 });
