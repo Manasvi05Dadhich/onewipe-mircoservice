@@ -8,6 +8,7 @@ const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, wallet);
 async function issueCert(hash) {
     try {
 
+        const bytes32hash = hash.startsWith('0x') ? hash : '0x' + hash;
         const tx = await contract.issueCert(bytes32hash);
         await tx.wait();
         console.log("Certificate stored on blockchain");
@@ -19,7 +20,7 @@ async function issueCert(hash) {
 async function revokeCert(hash) {
     try {
         const bytes32hash = hash.startsWith('0x') ? hash : '0x' + hash;
-        const tx = await contract.revokeCert(bytes32hash);
+        const tx = await contract.revokeCertificate(bytes32hash);
         await tx.wait();
         console.log("Certificate revoked from blockchain");
     } catch (error) {
@@ -30,7 +31,7 @@ async function revokeCert(hash) {
 async function verifyCert(hash) {
     try {
         const bytes32hash = hash.startsWith('0x') ? hash : '0x' + hash;
-        const isValid = await contract.verifyCert(bytes32hash);
+        const isValid = await contract.verifyCertificate(bytes32hash);
         console.log("Certificate verified from blockchain");
         return isValid;
     } catch (error) {
@@ -38,4 +39,4 @@ async function verifyCert(hash) {
         return false;
     }
 }
-module.exports = { issueCert, revokeCert, verifyCert };
+module.exports = { issueCert, revokeCert, verifyCert };     
