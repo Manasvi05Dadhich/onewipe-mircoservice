@@ -50,6 +50,8 @@ router.post('/issue',
                 hash,
                 signature
             });
+            await axios.post('http://localhost:3005/store', { hash });
+
             res.status(201).json({
                 message: "Certificate issued",
                 certificate: cert
@@ -106,15 +108,13 @@ router.patch('/certificate/:hash/revoke',
             if (cert.status === 'revoked') {
                 return res.status(400).json({ err: "Certificate already revoked" });
             }
-
             cert.status = 'revoked';
             await cert.save();
-
+            await axios.post('http://localhost:3005/revoke', { hash: req.params.hash });
             res.json({ message: "Certificate revoked", certificate: cert });
         } catch (error) {
             res.status(500).json({ err: "Internal server error" });
         }
     }
 );
-
 module.exports = router;
