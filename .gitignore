@@ -12,7 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 .npm/
 
-# Environment Variables
+
 .env
 .env.local
 .env.*.local

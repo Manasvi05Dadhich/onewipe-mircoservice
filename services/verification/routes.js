@@ -12,28 +12,46 @@ router.get('/verify/:hash', authMiddleware, async (req, res) => {
     try {
         const { hash } = req.params;
         if (!hash) {
-            return res.status(400).json({ error: "Hash is required" })
-        };
-
+            return res.status(400).json({ error: "Hash is required" });
+        }
 
         const cache = await redis.get(`verify:${hash}`);
         if (cache) {
             return res.json(JSON.parse(cache));
         }
-        const [certRes, blockRes] = await Promise.all([
-            axios.get(`${CERT_SERV}/certificate/${hash}`),
-            axios.get(`${BLOCKCHAIN_SERV}/verify/${hash}`)
-        ]);
-        const certificate = certRes.data;
-        const blockchain = blockRes.data;
+
+        // Forward the auth token to cert service (it also requires JWT)
+        const authHeader = req.headers.authorization;
+
+        // Call both services — cert might 404, so handle it separately
+        let certificate = null;
+        let blockchain = null;
+
+        try {
+            const certRes = await axios.get(`${CERT_SERV}/certificate/${hash}`, {
+                headers: { authorization: authHeader }
+            });
+            certificate = certRes.data.certificate;
+        } catch (err) {
+            if (err.response && err.response.status === 404) {
+                certificate = null;  // cert not in DB, that's ok
+            } else {
+                throw err;
+            }
+        }
+
+        const blockRes = await axios.get(`${BLOCKCHAIN_SERV}/verify/${hash}`);
+        blockchain = blockRes.data;
+
         const result = {
-            isValid: blockchain.isValid && certificate.status != 'revoked',
+            isValid: blockchain.isValid && (certificate ? certificate.status !== 'revoked' : false),
             certificate,
             blockchain
-        }
+        };
         await redis.setex(`verify:${hash}`, 300, JSON.stringify(result));
         res.json(result);
     } catch (error) {
+        console.error("Verify error:", error.message);
         res.status(500).json({ error: "Internal Server error" });
     }
 });
