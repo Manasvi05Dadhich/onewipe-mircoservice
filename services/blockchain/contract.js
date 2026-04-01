@@ -7,7 +7,6 @@ const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, wallet);
 
 async function issueCert(hash) {
     try {
-
         const bytes32hash = hash.startsWith('0x') ? hash : '0x' + hash;
         const tx = await contract.issueCert(bytes32hash);
         await tx.wait();

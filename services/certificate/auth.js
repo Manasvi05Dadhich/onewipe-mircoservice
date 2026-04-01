@@ -24,5 +24,4 @@ function requireRole(...roles) {
         next();
     };
 }
-
 module.exports = { authMiddleware, requireRole };
