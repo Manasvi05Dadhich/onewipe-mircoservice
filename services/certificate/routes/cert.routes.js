@@ -50,7 +50,7 @@ router.post('/issue',
                 hash,
                 signature
             });
-            await axios.post('http://localhost:3005/store', { hash });
+            await axios.post((process.env.BLOCKCHAIN_SERVICE || 'http://localhost:3005') + '/store', { hash });
 
             res.status(201).json({
                 message: "Certificate issued",
@@ -110,7 +110,7 @@ router.patch('/certificate/:hash/revoke',
             }
             cert.status = 'revoked';
             await cert.save();
-            await axios.post('http://localhost:3005/revoke', { hash: req.params.hash });
+            await axios.post((process.env.BLOCKCHAIN_SERVICE || 'http://localhost:3005') + '/revoke', { hash: req.params.hash });
             res.json({ message: "Certificate revoked", certificate: cert });
         } catch (error) {
             res.status(500).json({ err: "Internal server error" });

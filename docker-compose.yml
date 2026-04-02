@@ -1,0 +1,70 @@
+services:
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  auth:
+    build: ./services/auth
+    ports:
+      - "3001:3001"
+    environment:
+      - JWT_SECRET=manasvidadhich@6399l
+      - MONGO_URI=mongodb+srv://manasvidadhich:tanu2005@onewipeauth.96okd8s.mongodb.net/
+
+  signing:
+    build: ./services/signing
+    ports:
+      - "3002:3002"
+
+  certificate:
+    build: ./services/certificate
+    ports:
+      - "3003:3003"
+    environment:
+      - JWT_SECRET=manasvidadhich@6399l
+      - MONGO_URI=mongodb+srv://manasvidadhich:tanu2005@onewipeauth.96okd8s.mongodb.net/
+      - SIGNING_SERVICE=http://signing:3002
+      - BLOCKCHAIN_SERVICE=http://blockchain:3005
+    depends_on:
+      - signing
+      - blockchain
+
+  blockchain:
+    build: ./services/blockchain
+    ports:
+      - "3005:3005"
+    environment:
+      - RPC_URL=https://eth-sepolia.g.alchemy.com/v2/5X_lpYE28vT7uSLwOHO8N
+      - PRIVATE_KEY=1831421eb2d49ce218a1bf4cf6dce42e97498b0b5ce79cb2ac559adcc6a4eec6
+      - CONTRACT_ADDRESS=0x7b6f2BAdad089D13Db0bA6D67d631d8626Ea3Be0
+  verification:
+    build: ./services/verification
+    ports:
+      - "3004:3004"
+    environment:
+      - JWT_SECRET=manasvidadhich@6399l
+      - REDIS_URL=redis://redis:6379
+      - CERT_SERVICE=http://certificate:3003
+      - BLOCKCHAIN_SERVICE=http://blockchain:3005
+    depends_on:
+      - redis
+      - certificate
+      - blockchain
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - JWT_SECRET=manasvidadhich@6399l
+      - AUTH_SERVICE=http://auth:3001
+      - CERT_SERVICE=http://certificate:3003
+      - BLOCKCHAIN_SERVICE=http://blockchain:3005
+      - VERIFY_SERVICE=http://verification:3004
+    depends_on:
+      - auth
+      - signing
+      - certificate
+      - blockchain
+      - verification
