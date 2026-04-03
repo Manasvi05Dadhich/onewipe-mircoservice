@@ -91,6 +91,19 @@ router.get('/certificates/student/:email',
     }
 );
 
+router.get('/certificates/issued',
+    authMiddleware,
+    requireRole('university'),
+    async (req, res) => {
+        try {
+            const certs = await Certificate.find({ issuer: req.user.userId });
+            res.json({ count: certs.length, certificates: certs });
+        } catch (error) {
+            res.status(500).json({ err: "Internal server error" });
+        }
+    }
+);
+
 router.patch('/certificate/:hash/revoke',
     authMiddleware,
     requireRole('university'),

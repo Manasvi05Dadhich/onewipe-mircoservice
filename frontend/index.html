@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OneWipe — Certificate Verification Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0eef8;--card:#fff;--text:#0f0f10;--muted:#7b7b8a;
+  --accent:#5b4fcf;--border:#e4e2f0;--green:#16a34a;--red:#dc2626;
+  --tag-bg:#f5f3ff;--font:'Geist',system-ui,sans-serif;
+  --serif:'Instrument Serif',Georgia,serif;
+}
+html,body{height:100%;}
+body{font-family:var(--font);background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;}
+.mesh{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 50% at 10% 20%,#ddd6fe88 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 90% 80%,#fce7f388 0%,transparent 60%),radial-gradient(ellipse 40% 60% at 50% 50%,#e0e7ff55 0%,transparent 70%),#f0eef8;pointer-events:none;}
+.shell{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid rgba(255,255,255,0.6);background:rgba(240,238,248,0.75);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.brand{font-family:var(--serif);font-size:21px;letter-spacing:-0.3px;color:var(--text);display:flex;align-items:center;gap:9px;}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.nav-center{display:flex;gap:2px;background:rgba(255,255,255,0.6);border:1px solid var(--border);border-radius:30px;padding:4px;}
+.ntab{font-size:13px;font-weight:400;color:var(--muted);padding:7px 20px;border-radius:24px;cursor:pointer;border:none;background:transparent;font-family:var(--font);transition:all .18s;white-space:nowrap;display:none;}
+.ntab.vis{display:block;}
+.ntab.on{background:#fff;color:var(--text);font-weight:500;box-shadow:0 1px 6px rgba(0,0,0,.08);}
+.nav-r{display:flex;align-items:center;gap:10px;}
+.role-chip{font-size:12px;font-weight:500;padding:6px 14px;background:var(--tag-bg);color:var(--accent);border:1px solid #ddd6fe;border-radius:20px;}
+.logout-btn{font-size:12px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:var(--font);display:none;transition:all .15s;}
+.logout-btn.vis{display:block;}
+.logout-btn:hover{color:var(--text);}
+
+.pg{display:none;flex:1;animation:fi .22s ease;}
+.pg.on{display:flex;flex-direction:column;}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* AUTH */
+.auth-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 20px;}
+.auth-card{background:#fff;border:1px solid var(--border);border-radius:22px;padding:50px 46px;width:100%;max-width:410px;box-shadow:0 4px 40px rgba(91,79,207,.08);}
+.auth-toggle{display:flex;gap:2px;background:#f5f4fb;border-radius:22px;padding:3px;margin-bottom:28px;}
+.atab{flex:1;padding:8px;border-radius:18px;border:none;background:transparent;font-family:var(--font);font-size:13px;font-weight:400;color:var(--muted);cursor:pointer;transition:all .15s;}
+.atab.on{background:#fff;color:var(--text);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.eyebrow{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.auth-h{font-family:var(--serif);font-size:34px;line-height:1.15;color:var(--text);margin-bottom:6px;}
+.auth-h em{font-style:italic;color:var(--accent);}
+.auth-sub{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:32px;}
+.roles{display:flex;gap:8px;margin-bottom:28px;}
+.role-opt{flex:1;padding:12px 6px;text-align:center;border:1.5px solid var(--border);border-radius:13px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;background:#fff;transition:all .16s;font-family:var(--font);line-height:1.5;}
+.role-opt.on{border-color:var(--accent);color:var(--accent);background:var(--tag-bg);}
+.role-opt span{display:block;font-size:20px;margin-bottom:4px;}
+.inp{width:100%;padding:12px 15px;border:1px solid var(--border);border-radius:11px;font-size:14px;font-family:var(--font);color:var(--text);background:#fafafa;outline:none;transition:border .15s,background .15s;margin-bottom:12px;}
+.inp:focus{border-color:var(--accent);background:#fff;}
+.inp::placeholder{color:#bbb;}
+.lnk{font-size:12px;color:var(--accent);text-align:right;display:block;margin-bottom:18px;cursor:pointer;}
+.cta{width:100%;padding:13px;border:none;border-radius:11px;background:var(--text);color:#fff;font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity .15s;}
+.cta:hover{opacity:.82;}
+.cta:disabled{opacity:.5;cursor:not-allowed;}
+.auth-sw{text-align:center;margin-top:18px;font-size:13px;color:var(--muted);}
+.auth-sw a{color:var(--accent);cursor:pointer;}
+.auth-err{color:var(--red);font-size:12px;margin-bottom:12px;display:none;}
+.auth-err.on{display:block;}
+
+/* SHARED */
+.wrap{padding:40px 40px 56px;}
+.ctr{max-width:640px;margin:0 auto;}
+.pg-head{margin-bottom:36px;}
+.pg-ey{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.pg-h{font-family:var(--serif);font-size:40px;line-height:1.1;color:var(--text);}
+.pg-h em{font-style:italic;color:var(--accent);}
+.pg-sub{font-size:14px;color:var(--muted);margin-top:8px;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:28px;}
+.sc{background:#fff;border:1px solid var(--border);border-radius:18px;padding:24px 26px;}
+.sc-n{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px;}
+.sc-v{font-family:var(--serif);font-size:42px;color:var(--text);line-height:1;}
+.sc-t{font-size:12px;margin-top:8px;font-weight:500;}
+.tg{color:var(--green);}.tr{color:var(--red);}.tp{color:var(--accent);}
+
+/* TWO COL */
+.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;}
+.wcard{background:#fff;border:1px solid var(--border);border-radius:18px;padding:26px;}
+.wcard-h{font-size:13px;font-weight:500;color:var(--text);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+
+/* CERT ROW */
+.ci{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f5f4fb;}
+.ci:last-child{border-bottom:none;}
+.ci-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ci-body{flex:1;min-width:0;}
+.ci-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-meta{font-size:11px;color:var(--muted);margin-top:1px;font-family:monospace;}
+.ci-acts{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.pill{font-size:11px;font-weight:500;padding:3px 11px;border-radius:20px;white-space:nowrap;}
+.pill.pg{background:#dcfce7;color:#166534;}
+.pill.pr{background:#fee2e2;color:#991b1b;}
+.pill.pa{background:#fef9c3;color:#854d0e;}
+.rvk-btn{font-size:11px;font-weight:500;padding:3px 11px;border-radius:20px;border:1px solid #fecaca;color:#dc2626;background:#fff5f5;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap;}
+.rvk-btn:hover{background:#fee2e2;}
+.rvk-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* QUICK BTNS */
+.qbtn{display:flex;align-items:center;gap:13px;padding:14px 15px;border:1px solid var(--border);border-radius:13px;background:#fafafa;cursor:pointer;margin-bottom:9px;font-family:var(--font);transition:all .15s;text-align:left;width:100%;}
+.qbtn:last-child{margin-bottom:0;}
+.qbtn:hover{background:#fff;border-color:#c4b8f5;transform:translateY(-1px);}
+.qic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.ql{font-size:13px;font-weight:500;color:var(--text);}
+.qs{font-size:11px;color:var(--muted);margin-top:1px;}
+
+/* ISSUE */
+.drop{border:1.5px dashed #c4b8f5;border-radius:18px;padding:44px 24px;text-align:center;background:#faf9ff;cursor:pointer;margin-bottom:20px;transition:all .18s;}
+.drop:hover{background:#f3f0ff;border-color:var(--accent);}
+.drop.dragover{background:#f3f0ff;border-color:var(--accent);border-style:solid;}
+.drop-ic{font-size:30px;margin-bottom:12px;}
+.drop-h{font-size:15px;font-weight:500;color:var(--text);margin-bottom:5px;}
+.drop-s{font-size:12px;color:var(--muted);}
+.fpr{display:none;align-items:center;gap:13px;padding:13px 16px;background:#fff;border:1px solid var(--border);border-radius:13px;margin-bottom:22px;}
+.fpr.on{display:flex;}
+.fpr-ic{width:36px;height:36px;background:var(--tag-bg);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.fpr-b{flex:1;min-width:0;}
+.fpr-n{font-size:13px;font-weight:500;color:var(--text);}
+.fpr-m{font-size:11px;color:var(--muted);margin-top:2px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px;}
+.ff label{font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:5px;}
+.ff input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:11px;font-size:13px;font-family:var(--font);color:var(--text);background:#fafafa;outline:none;transition:border .15s,background .15s;}
+.ff input:focus{border-color:var(--accent);background:#fff;}
+.iacts{display:flex;gap:10px;margin-top:24px;}
+.btn-o{flex:1;padding:12px;background:#fff;border:1px solid var(--border);border-radius:11px;font-size:13px;font-family:var(--font);color:var(--text);cursor:pointer;}
+.btn-f{flex:2;padding:12px;background:var(--text);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity .15s;}
+.btn-f:hover{opacity:.82;}
+.btn-f:disabled{opacity:.5;cursor:not-allowed;}
+
+/* VERIFY */
+.vsearch{display:flex;gap:10px;margin-bottom:24px;}
+.vsearch input{flex:1;padding:13px 18px;border:1px solid var(--border);border-radius:11px;font-family:monospace;font-size:13px;color:var(--text);background:#fff;outline:none;transition:border .15s;}
+.vsearch input:focus{border-color:var(--accent);}
+.vsearch input::placeholder{color:#bbb;font-family:var(--font);}
+.vbtn{padding:13px 24px;background:var(--accent);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity .15s;}
+.vbtn:hover{opacity:.85;}
+.vbtn:disabled{opacity:.5;cursor:not-allowed;}
+.rcard{background:#fff;border:1px solid var(--border);border-radius:20px;overflow:hidden;display:none;}
+.rcard.on{display:block;animation:fi .2s ease;}
+.rcard-top{padding:30px 30px 22px;}
+.rbadge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:5px 13px;border-radius:20px;margin-bottom:20px;}
+.rb-ok{background:#dcfce7;color:#166534;}
+.rb-fail{background:#fee2e2;color:#991b1b;}
+.rcard-h{font-family:var(--serif);font-size:28px;color:var(--text);margin-bottom:4px;}
+.rcard-s{font-size:13px;color:var(--muted);}
+.rcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px;}
+.rf label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:4px;}
+.rf span{font-size:14px;font-weight:500;color:var(--text);}
+.rcard-chain{padding:16px 30px;background:#f8f7ff;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.chain-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* STUDENT */
+.cbig{background:#fff;border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:16px;}
+.cbig-h{font-family:var(--serif);font-size:26px;color:var(--text);margin-bottom:4px;}
+.cbig-s{font-size:13px;color:var(--muted);margin-bottom:22px;}
+.cbig-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;}
+.cbig-f label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:3px;}
+.cbig-f span{font-size:13px;font-weight:500;color:var(--text);}
+.hash-box{background:#f8f7ff;border:1px solid var(--border);border-radius:11px;padding:13px 16px;font-family:monospace;font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:16px;}
+.share-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;background:var(--tag-bg);border:1px solid #ddd6fe;border-radius:22px;font-size:12px;font-weight:500;color:var(--accent);cursor:pointer;font-family:var(--font);border-style:solid;}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(15,15,16,.35);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-bg.on{display:flex;}
+.modal{background:#fff;border:1px solid var(--border);border-radius:20px;padding:36px;max-width:380px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.12);animation:fi .18s ease;}
+.modal-h{font-family:var(--serif);font-size:24px;color:var(--text);margin-bottom:8px;}
+.modal-s{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.modal-cert{font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;}
+.modal-hash{font-family:monospace;font-size:11px;color:var(--muted);background:#f8f7ff;padding:8px 12px;border-radius:8px;margin-bottom:24px;word-break:break-all;}
+.modal-acts{display:flex;gap:10px;}
+.m-cancel{flex:1;padding:11px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--font);color:var(--text);cursor:pointer;}
+.m-confirm{flex:1;padding:11px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity .15s;}
+.m-confirm:hover{opacity:.85;}
+
+/* SPINNER */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;opacity:0;transition:all .25s;z-index:999;pointer-events:none;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<div class="shell">
+
+<nav>
+  <div class="brand"><div class="brand-dot"></div>OneWipe</div>
+  <div class="nav-center">
+    <button class="ntab vis on"  data-pg="auth"        onclick="go('auth',this)">Sign in</button>
+    <button class="ntab"         data-pg="uni-dash"    onclick="go('uni-dash',this)">Dashboard</button>
+    <button class="ntab"         data-pg="issue"       onclick="go('issue',this)">Issue cert</button>
+    <button class="ntab"         data-pg="verify"      onclick="go('verify',this)">Verify</button>
+    <button class="ntab"         data-pg="student-dash" onclick="go('student-dash',this)">My certs</button>
+  </div>
+  <div class="nav-r">
+    <div class="role-chip" id="rlabel">Guest</div>
+    <button class="logout-btn" id="lbtn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<!-- AUTH -->
+<div id="pg-auth" class="pg on">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-toggle">
+        <button class="atab on" id="tlogin" onclick="amode('login')">Sign in</button>
+        <button class="atab"    id="treg"   onclick="amode('register')">Register</button>
+      </div>
+      <div class="eyebrow" id="a-ey">Welcome back</div>
+      <div class="auth-h" id="a-h">Sign in to<br><em>OneWipe</em></div>
+      <div class="auth-sub" id="a-sub">Blockchain-verified certificates.<br>Choose your role to continue.</div>
+      <div class="roles" id="role-btns">
+        <button class="role-opt on" onclick="selRole(this,'university')"><span>🏛️</span>University</button>
+        <button class="role-opt"    onclick="selRole(this,'student')"><span>🎓</span>Student</button>
+        <button class="role-opt"    onclick="selRole(this,'hr')"><span>🏢</span>HR / Co.</button>
+      </div>
+      <div class="auth-err" id="a-err"></div>
+      <input class="inp" id="a-email" type="email" placeholder="Email address">
+      <input class="inp" id="a-name"  type="text"  placeholder="Full name" style="display:none">
+      <input class="inp" id="a-pass"  type="password" placeholder="Password">
+      <span class="lnk" id="a-forgot">Forgot password?</span>
+      <button class="cta" id="a-cta" onclick="doAuth()">Continue →</button>
+      <div class="auth-sw"><span id="a-swt">Don't have an account? </span><a id="a-swl" onclick="amode('register')">Register</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- UNI DASHBOARD -->
+<div id="pg-uni-dash" class="pg">
+  <div class="wrap">
+    <div class="pg-head">
+      <div class="pg-ey">University portal</div>
+      <div class="pg-h">Certificate<br><em id="uname">Dashboard.</em></div>
+      <div class="pg-sub" id="uni-sub">Manage your issued certificates</div>
+    </div>
+    <div class="stats">
+      <div class="sc"><div class="sc-n">Total issued</div><div class="sc-v" id="s-total">—</div><div class="sc-t tg" id="s-total-sub">Loading…</div></div>
+      <div class="sc"><div class="sc-n">Active</div><div class="sc-v" id="s-active">—</div><div class="sc-t tp">On-chain</div></div>
+      <div class="sc"><div class="sc-n">Revoked</div><div class="sc-v" id="s-revoked">—</div><div class="sc-t tr">Marked invalid</div></div>
+    </div>
+    <div class="two">
+      <div class="wcard">
+        <div class="wcard-h">Issued certificates</div>
+        <div id="cert-list"><div class="empty-state">Loading certificates…</div></div>
+      </div>
+      <div class="wcard">
+        <div class="wcard-h">Quick actions</div>
+        <button class="qbtn" onclick="go('issue',getTab('issue'))">
+          <div class="qic" style="background:#f3f0ff">📄</div>
+          <div><div class="ql">Issue certificate</div><div class="qs">Upload & sign on-chain</div></div>
+        </button>
+        <button class="qbtn" onclick="go('verify',getTab('verify'))">
+          <div class="qic" style="background:#f0fdf4">🔍</div>
+          <div><div class="ql">Verify certificate</div><div class="qs">Check blockchain status</div></div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ISSUE -->
+<div id="pg-issue" class="pg">
+  <div class="wrap"><div class="ctr">
+    <div class="pg-head">
+      <div class="pg-ey">Certificate issuance</div>
+      <div class="pg-h">Issue &<br><em>sign.</em></div>
+      <div class="pg-sub">Upload the PDF, fill in the details, and store the hash on-chain.</div>
+    </div>
+    <input type="file" id="pdf-input" accept=".pdf" style="display:none">
+    <div class="drop" id="drop-zone" onclick="document.getElementById('pdf-input').click()">
+      <div class="drop-ic">⬆️</div>
+      <div class="drop-h">Drop certificate PDF here</div>
+      <div class="drop-s">PDF only · Click or drag to upload</div>
+    </div>
+    <div class="fpr" id="file-preview">
+      <div class="fpr-ic">📄</div>
+      <div class="fpr-b"><div class="fpr-n" id="fp-name">—</div><div class="fpr-m" id="fp-size">—</div></div>
+      <span style="font-size:14px;color:var(--muted);cursor:pointer" onclick="clearFile()">✕</span>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Student name</label><input id="i-name" placeholder="Full name"></div>
+      <div class="ff"><label>Student email</label><input id="i-email" placeholder="student@university.edu"></div>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Course / programme</label><input id="i-course" placeholder="B.Tech Computer Science"></div>
+      <div class="ff"><label>Issue date</label><input id="i-date" type="date"></div>
+    </div>
+    <div class="iacts">
+      <button class="btn-o" onclick="go('uni-dash',getTab('uni-dash'))">Cancel</button>
+      <button class="btn-f" id="issue-btn" onclick="issueCert()">Sign & store on-chain →</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- VERIFY -->
+<div id="pg-verify" class="pg">
+  <div class="wrap"><div class="ctr">
+    <div class="pg-head">
+      <div class="pg-ey">Verification</div>
+      <div class="pg-h">Verify a<br><em>certificate.</em></div>
+      <div class="pg-sub">Enter a certificate hash to check its authenticity on the Ethereum Sepolia blockchain.</div>
+    </div>
+    <div class="vsearch">
+      <input id="hinput" placeholder="Certificate hash  e.g. 03c9f9bae…">
+      <button class="vbtn" id="v-btn" onclick="doVerify()">Verify</button>
+    </div>
+    <div id="vresult" class="rcard">
+      <div class="rcard-top">
+        <div id="rbadge" class="rbadge rb-ok">✓ Valid certificate</div>
+        <div class="rcard-h" id="v-course">—</div>
+        <div class="rcard-s" id="v-issuer">—</div>
+        <div class="rcard-grid">
+          <div class="rf"><label>Holder</label><span id="v-holder">—</span></div>
+          <div class="rf"><label>Email</label><span id="v-email">—</span></div>
+          <div class="rf"><label>Status</label><span id="v-status">—</span></div>
+          <div class="rf"><label>Hash</label><span id="v-hash" style="font-size:11px;color:var(--muted);font-family:monospace">—</span></div>
+        </div>
+      </div>
+      <div class="rcard-chain" id="v-chain"><div class="chain-dot" id="v-chain-dot"></div><span id="v-chain-text">—</span></div>
+    </div>
+  </div></div>
+</div>
+
+<!-- STUDENT DASH -->
+<div id="pg-student-dash" class="pg">
+  <div class="wrap"><div class="ctr">
+    <div class="pg-head">
+      <div class="pg-ey">Student portal</div>
+      <div class="pg-h">Your verified<br><em>credentials.</em></div>
+      <div class="pg-sub">All certificates are anchored on the Ethereum Sepolia blockchain.</div>
+    </div>
+    <div id="student-certs"><div class="empty-state">Loading certificates…</div></div>
+  </div></div>
+</div>
+
+</div><!-- shell -->
+
+<!-- REVOKE MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-h">Revoke certificate?</div>
+    <div class="modal-s">This marks the certificate as invalid on-chain. This cannot be undone.</div>
+    <div class="modal-cert" id="m-cert"></div>
+    <div class="modal-hash" id="m-hash"></div>
+    <div class="modal-acts">
+      <button class="m-cancel" onclick="closeModal()">Cancel</button>
+      <button class="m-confirm" id="m-confirm" onclick="execRevoke()">Yes, revoke</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000';
+let token = localStorage.getItem('ow_token') || '';
+let userEmail = localStorage.getItem('ow_email') || '';
+let userRole = localStorage.getItem('ow_role') || '';
+let currentMode = 'login';
+let role = 'university';
+let pendingHash = null;
+let selectedFile = null;
+let allCerts = [];
+
+const TABS = {
+  university: ['uni-dash','issue','verify'],
+  student:    ['student-dash','verify'],
+  hr:         ['verify']
+};
+const LABELS = {university:'University admin',student:'Student',hr:'HR / Company'};
+
+// --- HELPERS ---
+function getTab(pg){ return document.querySelector(`.ntab[data-pg="${pg}"]`); }
+
+function go(id, tab){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  const el = document.getElementById('pg-'+id);
+  if(el) el.classList.add('on');
+  if(tab) tab.classList.add('on');
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2800);
+}
+
+async function apiFetch(path, opts = {}){
+  const headers = opts.headers || {};
+  if(token) headers['Authorization'] = 'Bearer ' + token;
+  if(!(opts.body instanceof FormData) && opts.body){
+    headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(opts.body);
+  }
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.err || data.error || 'Request failed');
+  return data;
+}
+
+// --- AUTH ---
+function selRole(el, r){
+  document.querySelectorAll('.role-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); role = r;
+}
+
+function amode(m){
+  currentMode = m;
+  const isR = m==='register';
+  document.getElementById('tlogin').classList.toggle('on',!isR);
+  document.getElementById('treg').classList.toggle('on',isR);
+  document.getElementById('a-name').style.display = isR?'block':'none';
+  document.getElementById('a-forgot').style.display = isR?'none':'block';
+  document.getElementById('a-ey').textContent = isR?'Create account':'Welcome back';
+  document.getElementById('a-h').innerHTML = isR?'Join<br><em>OneWipe</em>':'Sign in to<br><em>OneWipe</em>';
+  document.getElementById('a-sub').innerHTML = isR?'Select your role and create your account.':'Blockchain-verified certificates.<br>Choose your role to continue.';
+  document.getElementById('a-cta').textContent = isR?'Create account →':'Continue →';
+  document.getElementById('a-swt').textContent = isR?'Already have an account? ':"Don't have an account? ";
+  document.getElementById('a-swl').textContent = isR?'Sign in':'Register';
+  document.getElementById('a-swl').onclick = ()=>amode(isR?'login':'register');
+  document.getElementById('a-err').classList.remove('on');
+}
+
+async function doAuth(){
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-pass').value.trim();
+  const name  = document.getElementById('a-name').value.trim();
+  const btn   = document.getElementById('a-cta');
+  const errEl = document.getElementById('a-err');
+
+  errEl.classList.remove('on');
+  if(!email || !pass){ errEl.textContent='Email and password required'; errEl.classList.add('on'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Please wait…';
+
+  try {
+    if(currentMode === 'register'){
+      if(!name){ errEl.textContent='Name is required'; errEl.classList.add('on'); btn.disabled=false; btn.textContent='Create account →'; return; }
+      await apiFetch('/auth/signup', {
+        method:'POST',
+        body: { email, password: pass, role }
+      });
+      toast('Account created! Signing in…');
+    }
+    // Login
+    const data = await apiFetch('/auth/login', {
+      method:'POST',
+      body: { email, password: pass }
+    });
+    token = data.token;
+    userEmail = email;
+    userRole = role;
+    localStorage.setItem('ow_token', token);
+    localStorage.setItem('ow_email', email);
+    localStorage.setItem('ow_role', role);
+    enterApp();
+  } catch(e){
+    errEl.textContent = e.message;
+    errEl.classList.add('on');
+  }
+  btn.disabled = false;
+  btn.textContent = currentMode==='register' ? 'Create account →' : 'Continue →';
+}
+
+function enterApp(){
+  document.querySelectorAll('.ntab').forEach(t=>{
+    const pg = t.dataset.pg;
+    if(pg==='auth'){ t.classList.remove('vis','on'); return; }
+    t.classList.toggle('vis', TABS[userRole].includes(pg));
+  });
+  document.getElementById('rlabel').textContent = LABELS[userRole] || userRole;
+  document.getElementById('lbtn').classList.add('vis');
+  if(userRole==='university'){ go('uni-dash', getTab('uni-dash')); loadUniDash(); }
+  else if(userRole==='student'){ go('student-dash', getTab('student-dash')); loadStudentCerts(); }
+  else go('verify', getTab('verify'));
+}
+
+function logout(){
+  token=''; userEmail=''; userRole='';
+  localStorage.removeItem('ow_token');
+  localStorage.removeItem('ow_email');
+  localStorage.removeItem('ow_role');
+  document.querySelectorAll('.ntab').forEach(t=>{
+    t.classList.remove('on','vis');
+    if(t.dataset.pg==='auth'){ t.classList.add('vis','on'); }
+  });
+  document.getElementById('lbtn').classList.remove('vis');
+  document.getElementById('rlabel').textContent='Guest';
+  go('auth', null);
+  document.querySelector('[data-pg="auth"]').classList.add('on');
+}
+
+// --- UNI DASHBOARD ---
+async function loadUniDash(){
+  try {
+    const data = await apiFetch('/cert/certificates/student/' + encodeURIComponent(userEmail));
+    allCerts = data.certificates || [];
+    renderCertList();
+    // Stats
+    const active = allCerts.filter(c=>c.status==='active').length;
+    const revoked = allCerts.filter(c=>c.status==='revoked').length;
+    document.getElementById('s-total').textContent = allCerts.length;
+    document.getElementById('s-total-sub').textContent = allCerts.length + ' certificates';
+    document.getElementById('s-active').textContent = active;
+    document.getElementById('s-revoked').textContent = revoked;
+  } catch(e){
+    document.getElementById('cert-list').innerHTML = '<div class="empty-state">No certificates found or error loading.</div>';
+    document.getElementById('s-total').textContent = '0';
+    document.getElementById('s-active').textContent = '0';
+    document.getElementById('s-revoked').textContent = '0';
+  }
+}
+
+function renderCertList(){
+  const el = document.getElementById('cert-list');
+  if(!allCerts.length){ el.innerHTML='<div class="empty-state">No certificates issued yet. Issue your first one!</div>'; return; }
+  el.innerHTML = allCerts.map(c => {
+    const isRevoked = c.status==='revoked';
+    const dotColor = isRevoked ? '#ef4444' : '#22c55e';
+    const pillClass = isRevoked ? 'pr' : 'pg';
+    const pillText = isRevoked ? 'Revoked' : 'Active';
+    const shortHash = c.hash ? c.hash.substring(0,12)+'…' : '—';
+    const date = c.issuedAt ? new Date(c.issuedAt).toLocaleDateString() : '';
+    return `<div class="ci">
+      <div class="ci-dot" style="background:${dotColor}"></div>
+      <div class="ci-body"><div class="ci-name">${esc(c.studentName)} — ${esc(c.course)}</div><div class="ci-meta">${shortHash} · ${date}</div></div>
+      <div class="ci-acts">
+        <div class="pill ${pillClass}">${pillText}</div>
+        <button class="rvk-btn" ${isRevoked?'disabled':''} onclick="askRevoke('${esc(c.hash)}','${esc(c.studentName)} — ${esc(c.course)}')">Revoke</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){ return String(s||'').replace(/'/g,"&#39;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+
+// --- REVOKE ---
+function askRevoke(hash, name){
+  pendingHash = hash;
+  document.getElementById('m-cert').textContent = name;
+  document.getElementById('m-hash').textContent = hash;
+  document.getElementById('modal').classList.add('on');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('on'); pendingHash=null; }
+
+async function execRevoke(){
+  if(!pendingHash) return;
+  const btn = document.getElementById('m-confirm');
+  btn.disabled = true; btn.textContent = 'Revoking…';
+  try {
+    await apiFetch('/cert/certificate/'+pendingHash+'/revoke', { method:'PATCH' });
+    toast('Certificate revoked · updated on-chain');
+    closeModal();
+    loadUniDash();
+  } catch(e){
+    toast('Revoke failed: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Yes, revoke';
+}
+
+// --- FILE UPLOAD ---
+const dropZone = document.getElementById('drop-zone');
+const pdfInput = document.getElementById('pdf-input');
+
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', ()=> dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+pdfInput.addEventListener('change', ()=>{ if(pdfInput.files.length) handleFile(pdfInput.files[0]); });
+
+function handleFile(file){
+  if(!file.name.endsWith('.pdf')){ toast('Only PDF files allowed'); return; }
+  selectedFile = file;
+  document.getElementById('fp-name').textContent = file.name;
+  document.getElementById('fp-size').textContent = 'PDF · ' + (file.size/1024/1024).toFixed(1) + ' MB';
+  document.getElementById('file-preview').classList.add('on');
+  dropZone.style.display = 'none';
+}
+function clearFile(){
+  selectedFile = null;
+  pdfInput.value = '';
+  document.getElementById('file-preview').classList.remove('on');
+  dropZone.style.display = '';
+}
+
+// --- ISSUE CERT ---
+async function issueCert(){
+  const name = document.getElementById('i-name').value.trim();
+  const email = document.getElementById('i-email').value.trim();
+  const course = document.getElementById('i-course').value.trim();
+  const btn = document.getElementById('issue-btn');
+
+  if(!selectedFile){ toast('Please upload a PDF'); return; }
+  if(!name || !email || !course){ toast('Fill in all required fields'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Signing & storing…';
+
+  const form = new FormData();
+  form.append('pdf', selectedFile);
+  form.append('studentName', name);
+  form.append('studentEmail', email);
+  form.append('course', course);
+
+  try {
+    const data = await apiFetch('/cert/issue', { method:'POST', body: form });
+    toast('Certificate issued & stored on Sepolia ✓');
+    // Clear form
+    clearFile();
+    document.getElementById('i-name').value = '';
+    document.getElementById('i-email').value = '';
+    document.getElementById('i-course').value = '';
+    document.getElementById('i-date').value = '';
+    go('uni-dash', getTab('uni-dash'));
+    loadUniDash();
+  } catch(e){
+    toast('Issue failed: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Sign & store on-chain →';
+}
+
+// --- VERIFY ---
+async function doVerify(){
+  const hash = document.getElementById('hinput').value.trim();
+  if(!hash){ toast('Enter a certificate hash'); return; }
+
+  const btn = document.getElementById('v-btn');
+  btn.disabled = true; btn.textContent = 'Checking…';
+
+  try {
+    const data = await apiFetch('/verify/verify/' + hash);
+    const rc = document.getElementById('vresult');
+    const rb = document.getElementById('rbadge');
+    rc.classList.add('on');
+
+    const cert = data.certificate;
+    const chain = data.blockchain;
+    const valid = data.isValid;
+
+    rb.className = 'rbadge ' + (valid ? 'rb-ok' : 'rb-fail');
+    rb.textContent = valid ? '✓ Valid certificate' : '✕ Certificate invalid or not found';
+
+    if(cert){
+      document.getElementById('v-course').textContent = cert.course || '—';
+      document.getElementById('v-issuer').textContent = 'Issued ' + (cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString() : '—');
+      document.getElementById('v-holder').textContent = cert.studentName || '—';
+      document.getElementById('v-email').textContent = cert.studentEmail || '—';
+      document.getElementById('v-status').textContent = cert.status || '—';
+    } else {
+      document.getElementById('v-course').textContent = 'Certificate not found in database';
+      document.getElementById('v-issuer').textContent = '—';
+      document.getElementById('v-holder').textContent = '—';
+      document.getElementById('v-email').textContent = '—';
+      document.getElementById('v-status').textContent = '—';
+    }
+    document.getElementById('v-hash').textContent = hash.substring(0,20)+'…';
+
+    const chainDot = document.getElementById('v-chain-dot');
+    const chainText = document.getElementById('v-chain-text');
+    if(chain && chain.isValid){
+      chainDot.style.background = '#22c55e';
+      chainText.textContent = 'Ethereum Sepolia · Verified on-chain ✓';
+    } else {
+      chainDot.style.background = '#ef4444';
+      chainText.textContent = 'Not found on blockchain';
+    }
+  } catch(e){
+    toast('Verify failed: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Verify';
+}
+
+// --- STUDENT CERTS ---
+async function loadStudentCerts(){
+  const el = document.getElementById('student-certs');
+  try {
+    const data = await apiFetch('/cert/certificates/student/' + encodeURIComponent(userEmail));
+    const certs = data.certificates || [];
+    if(!certs.length){ el.innerHTML='<div class="empty-state">No certificates found for your account.</div>'; return; }
+    el.innerHTML = certs.map(c => {
+      const pillClass = c.status==='revoked' ? 'pr' : 'pg';
+      const pillText = c.status==='revoked' ? 'Revoked' : 'Active';
+      return `<div class="cbig">
+        <div class="pill ${pillClass}" style="margin-bottom:16px">${pillText}</div>
+        <div class="cbig-h">${esc(c.course)}</div>
+        <div class="cbig-s">Issued ${c.issuedAt ? new Date(c.issuedAt).toLocaleDateString() : '—'}</div>
+        <div class="cbig-grid">
+          <div class="cbig-f"><label>Student name</label><span>${esc(c.studentName)}</span></div>
+          <div class="cbig-f"><label>Email</label><span>${esc(c.studentEmail)}</span></div>
+          <div class="cbig-f"><label>Status</label><span>${esc(c.status)}</span></div>
+          <div class="cbig-f"><label>Blockchain</label><span>Ethereum Sepolia</span></div>
+        </div>
+        <div class="hash-box">${esc(c.hash)}</div>
+        <button class="share-btn" onclick="navigator.clipboard.writeText('${esc(c.hash)}');toast('Hash copied!')">📋 Copy hash</button>
+      </div>`;
+    }).join('');
+  } catch(e){
+    el.innerHTML='<div class="empty-state">Error loading certificates.</div>';
+  }
+}
+
+// --- AUTO-LOGIN ---
+if(token && userRole){
+  role = userRole;
+  enterApp();
+}
+
+// Modal close on bg click
+document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+</script>
+</body>
+</html>
