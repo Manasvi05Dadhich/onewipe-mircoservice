@@ -10,7 +10,6 @@ A production-ready **microservices architecture** for issuing, managing, and ver
 
 https://github.com/user-attachments/assets/YOUR_VIDEO_ID
 
-> _Replace the link above after uploading your demo video to GitHub._
 
 **Demo flow:** Register → Login as University → Issue certificate (PDF upload) → Copy hash → Verify on blockchain → Revoke → Re-verify (invalid) → Login as Student → View certs
 
