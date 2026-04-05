@@ -8,6 +8,16 @@ app.use(express.json());
 
 app.use('/', certRoutes);
 
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ err: 'Route not found' });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+    console.error('Server error:', err.message);
+    res.status(500).json({ err: err.message || 'Internal server error' });
+});
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {

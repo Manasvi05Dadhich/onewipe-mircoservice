@@ -4,5 +4,9 @@ const services = require('../config/service');
 module.exports = createProxyMiddleware({
     target: services.verification,
     changeOrigin: true,
-    pathRewrite: { '^/verify': '' }
+    on: {
+        error: (err, req, res) => {
+            res.status(502).json({ err: 'Verification service unavailable' });
+        }
+    }
 });

@@ -401,7 +401,9 @@ async function apiFetch(path, opts = {}){
     opts.body = JSON.stringify(opts.body);
   }
   const res = await fetch(API + path, { ...opts, headers });
-  const data = await res.json();
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error(text.substring(0,100) || 'Server error'); }
   if(!res.ok) throw new Error(data.err || data.error || 'Request failed');
   return data;
 }
@@ -502,7 +504,9 @@ function logout(){
 // --- UNI DASHBOARD ---
 async function loadUniDash(){
   try {
-    const data = await apiFetch('/cert/certificates/student/' + encodeURIComponent(userEmail));
+    console.log('Loading dashboard...');
+    const data = await apiFetch('/cert/certificates/issued');
+    console.log('Dashboard data:', data);
     allCerts = data.certificates || [];
     renderCertList();
     // Stats
@@ -513,7 +517,8 @@ async function loadUniDash(){
     document.getElementById('s-active').textContent = active;
     document.getElementById('s-revoked').textContent = revoked;
   } catch(e){
-    document.getElementById('cert-list').innerHTML = '<div class="empty-state">No certificates found or error loading.</div>';
+    console.error('Dashboard load error:', e.message);
+    document.getElementById('cert-list').innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
     document.getElementById('s-total').textContent = '0';
     document.getElementById('s-active').textContent = '0';
     document.getElementById('s-revoked').textContent = '0';
@@ -534,6 +539,7 @@ function renderCertList(){
       <div class="ci-dot" style="background:${dotColor}"></div>
       <div class="ci-body"><div class="ci-name">${esc(c.studentName)} — ${esc(c.course)}</div><div class="ci-meta">${shortHash} · ${date}</div></div>
       <div class="ci-acts">
+        <button class="share-btn" style="font-size:11px;padding:3px 10px;" onclick="navigator.clipboard.writeText('${esc(c.hash)}');toast('Hash copied!')">📋</button>
         <div class="pill ${pillClass}">${pillText}</div>
         <button class="rvk-btn" ${isRevoked?'disabled':''} onclick="askRevoke('${esc(c.hash)}','${esc(c.studentName)} — ${esc(c.course)}')">Revoke</button>
       </div>
@@ -615,13 +621,18 @@ async function issueCert(){
 
   try {
     const data = await apiFetch('/cert/issue', { method:'POST', body: form });
-    toast('Certificate issued & stored on Sepolia ✓');
+    const cert = data.certificate;
+    const hash = cert ? cert.hash : 'unknown';
+    console.log('Issued cert:', data);
+    toast('✓ Certificate issued! Hash: ' + hash);
     // Clear form
     clearFile();
     document.getElementById('i-name').value = '';
     document.getElementById('i-email').value = '';
     document.getElementById('i-course').value = '';
     document.getElementById('i-date').value = '';
+    // Copy hash to clipboard
+    try { navigator.clipboard.writeText(hash); } catch(x){}
     go('uni-dash', getTab('uni-dash'));
     loadUniDash();
   } catch(e){
