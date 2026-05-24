@@ -2,8 +2,6 @@
 
 A production-ready **microservices architecture** for issuing, managing, and verifying academic certificates with **blockchain immutability** and **cryptographic signatures**.
 
-> 🎥 **[Watch Demo Video](#demo)**
-
 ---
 
 ## Demo
